@@ -279,7 +279,7 @@ async def refresh_customer_uuid_map():
             await check_and_create_tables()
         except Exception as e:
             logging.error(f"定時刷新 customer_uuid 映射失敗: {str(e)}")
-        await asyncio.sleep(60)  # 等待 10 分鐘 (600 秒)
+        await asyncio.sleep(600)  # 等待 10 分鐘 (600 秒)
 
 # 解析函數（保持不變）
 def timestamp_to_yymmddhhmm(data: list) -> str:
