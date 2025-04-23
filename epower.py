@@ -308,9 +308,15 @@ def decode_payload(payload: bytes):
     uuid = ''.join(data_bytes[0:16])
     # if uuid != '25325545C2FD4C2F94984F1D5F2D39F9':
     #     return None
+
+    customer_id = find_customer_id_by_uuid(uuid)
+    if not customer_id:
+        return 
+    
     timestamp_str = timestamp_to_yymmddhhmm(data_bytes[24:29])
     building_str = None
     result = {
+        "customer_id":customer_id,
         "uuid": uuid,
         "id_esp32": ''.join(data_bytes[16:20]),
         "model": int(''.join(data_bytes[20]), 16),
@@ -361,7 +367,7 @@ def decode_payload(payload: bytes):
         "t_pf": round(hex_to_decimal_little_endian(data_bytes[120:122]) * 0.0001,5),
         "channel_reserved": hex_to_decimal_little_endian(data_bytes[122:])
     }
-
+    
     return result
 
 # MQTT 回調函數
@@ -383,8 +389,9 @@ async def process_queue():
             # 非阻塞地從佇列中取訊息
             data = MESSAGE_QUEUE.get_nowait()
             result = decode_payload(data)
-            await write_to_postgresql(result)
-            await write_to_influxdb(result)
+            if result :
+                await write_to_postgresql(result)
+                await write_to_influxdb(result)
         except queue.Empty:
             await asyncio.sleep(0.1)
         except Exception as e:
@@ -412,15 +419,11 @@ async def write_to_influxdb(data):
         if not uuid:
             raise ValueError("data 中缺少 uuid 欄位")
 
-        # 查找 customer_id
-        customer_id = find_customer_id_by_uuid(uuid)
-        if not customer_id:
-            raise ValueError(f"未找到 uuid {uuid} 對應的 customer_id")
-
+        customer_id = data.get("customer_id")
         # 創建 InfluxDB Point
         point = Point("power_metrics") \
             .tag("uuid", uuid) \
-            .tag("customer_id", str(customer_id))  # 添加 customer_id 作為 tag
+            .tag("customer_id", customer_id)  # 添加 customer_id 作為 tag
 
         # 將所有欄位（包括 timestamp）作為 fields，排除特定欄位
         exclude_fields = {"uuid", "buildingtime","customer_id"}
@@ -445,11 +448,9 @@ async def write_to_postgresql(data):
     global SAMPLE_DATA,CUSTOMER_UUID_MAP
     try:
         # 檢查表是否存在並確保欄位匹配
-        uuid = data.get("uuid")
-        customer_id = find_customer_id_by_uuid(uuid)
-        schema_name = customer_id
+        schema_name = data.pop("customer_id", None)
         table_name = "power_metrics"
-        SAMPLE_DATA[customer_id] = data
+        SAMPLE_DATA[schema_name] = data
         async with PG_POOL.connection() as conn:
             # 使用 await conn.set_autocommit(True) 設置 autocommit
             await conn.set_autocommit(True)
@@ -471,7 +472,6 @@ async def write_to_postgresql(data):
 
         logging.info("✅ 成功寫入 PostgreSQL")
     except Exception as e:
-        print(f"data:{data}")
         logging.error(f"❌ 寫入 PostgreSQL 失敗（schema_name: {schema_name}, table_name: {table_name}）: {str(e)}")
 
 # 主程式
