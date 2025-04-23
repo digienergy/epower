@@ -1,0 +1,9 @@
+# 忽略所有 PNG 圖片
+.env
+.vscode
+
+# 忽略特定資料夾（如果不想上傳 `factory_demand_data2024_7`）
+factory_demand_data2024_7/
+
+# 忽略虛擬環境資料夾
+simulation_venv/
