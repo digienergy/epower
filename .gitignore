@@ -6,4 +6,4 @@
 factory_demand_data2024_7/
 
 # 忽略虛擬環境資料夾
-simulation_venv/
+epower_venv/
