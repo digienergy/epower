@@ -311,7 +311,7 @@ def decode_payload(payload: bytes):
 
     customer_id = find_customer_id_by_uuid(uuid)
     if not customer_id:
-        return 
+        return None
     
     timestamp_str = timestamp_to_yymmddhhmm(data_bytes[24:29])
     building_str = None
