@@ -389,9 +389,11 @@ async def process_queue():
             # 非阻塞地從佇列中取訊息
             data = MESSAGE_QUEUE.get_nowait()
             result = decode_payload(data)
+
             if result :
-                await write_to_postgresql(result)
                 await write_to_influxdb(result)
+                await write_to_postgresql(result)
+
         except queue.Empty:
             await asyncio.sleep(0.1)
         except Exception as e:
@@ -414,12 +416,14 @@ def infer_column_type(value, key: str) -> str:
 # 非同步寫入 InfluxDB（修改後：將 customer_id 作為 tag）
 async def write_to_influxdb(data):
     try:
+        
         # 檢查必要欄位
         uuid = data.get("uuid")
         if not uuid:
             raise ValueError("data 中缺少 uuid 欄位")
 
         customer_id = data.get("customer_id")
+        
         # 創建 InfluxDB Point
         point = Point("power_metrics") \
             .tag("uuid", uuid) \
