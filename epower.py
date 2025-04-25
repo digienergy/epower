@@ -433,7 +433,7 @@ async def write_to_influxdb(data):
             .tag("addr", addr)# 添加 customer_id 作為 tag
 
         # 將所有欄位（包括 timestamp）作為 fields，排除特定欄位
-        exclude_fields = {"uuid", "buildingtime","customer_id","addr"}
+        exclude_fields = {"uuid", "buildingtime","customer_id","addr","id_esp32"}
         for key, value in data.items():
             if key in exclude_fields or value is None:
                 continue
