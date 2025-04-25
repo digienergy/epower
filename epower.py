@@ -421,16 +421,17 @@ async def write_to_influxdb(data):
         uuid = data.get("uuid")
         if not uuid:
             raise ValueError("data 中缺少 uuid 欄位")
-
-        customer_id = data.get("customer_id")
         
+        customer_id = data.get("customer_id")
+        addr = data.get("addr")
         # 創建 InfluxDB Point
         point = Point("power_metrics") \
+            .tag("customer_id", customer_id) \
             .tag("uuid", uuid) \
-            .tag("customer_id", customer_id)  # 添加 customer_id 作為 tag
+            .tag("addr", addr)# 添加 customer_id 作為 tag
 
         # 將所有欄位（包括 timestamp）作為 fields，排除特定欄位
-        exclude_fields = {"uuid", "buildingtime","customer_id"}
+        exclude_fields = {"uuid", "buildingtime","customer_id","addr"}
         for key, value in data.items():
             if key in exclude_fields or value is None:
                 continue
