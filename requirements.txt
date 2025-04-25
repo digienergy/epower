@@ -4,7 +4,6 @@ influxdb-client==1.48.0
 paho-mqtt==2.1.0
 psycopg==3.2.6
 psycopg-binary==3.2.6
-psycopg-c==3.2.6
 psycopg-pool==3.2.6
 psycopg2-binary==2.9.10
 python-dateutil==2.9.0.post0
