@@ -424,10 +424,12 @@ async def write_to_influxdb(data):
         
         customer_id = data.get("customer_id")
         addr = data.get("addr")
+        id_esp32 = data.get("id_esp32")
         # 創建 InfluxDB Point
         point = Point("power_metrics") \
             .tag("customer_id", customer_id) \
             .tag("uuid", uuid) \
+            .tag("id_esp32", id_esp32) \
             .tag("addr", addr)# 添加 customer_id 作為 tag
 
         # 將所有欄位（包括 timestamp）作為 fields，排除特定欄位
